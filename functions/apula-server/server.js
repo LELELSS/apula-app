@@ -63,7 +63,7 @@ app.post("/send-verification", async (req, res) => {
 
   try {
     if (resend && senderEmail) {
-      await Promise.race([
+      const resendResult = await Promise.race([
         resend.emails.send({
           from: `Apula <${senderEmail}>`,
           to: [email],
@@ -74,6 +74,10 @@ app.post("/send-verification", async (req, res) => {
           setTimeout(() => reject(new Error("Resend email send timeout")), 15000),
         ),
       ]);
+
+      if (resendResult?.error) {
+        throw new Error(`Resend error: ${resendResult.error.message || "Unknown resend error"}`);
+      }
     } else {
       await Promise.race([
         transporter.sendMail(mailOptions),
